@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: Inter, -apple-system, sans-serif;
+      font-size: 12px;
+      color: #e0e0e0;
+      background: #2c2c2c;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      gap: 12px;
+    }
+
+    .header {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .selected-frame {
+      font-size: 11px;
+      color: #a0a0a0;
+      background: #1e1e1e;
+      border: 1px solid #3d3d3d;
+      border-radius: 6px;
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .selected-frame .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+      background: #7b61ff;
+      flex-shrink: 0;
+    }
+
+    .selected-frame .name {
+      color: #fff;
+      font-weight: 500;
+    }
+
+    .options-row{
+      display: flex;
+      flex-direction: row;
+      gap: 24px;
+    }
+
+    .controls-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .unit-select {
+      background: #1e1e1e;
+      border: 1px solid #3d3d3d;
+      border-radius: 6px;
+      color: #e0e0e0;
+      font-size: 11px;
+      padding: 6px 10px;
+      cursor: pointer;
+      outline: none;
+    }
+
+    .unit-select:focus {
+      border-color: #7b61ff;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: #aaa;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .checkbox-label input {
+      accent-color: #7b61ff;
+    }
+
+    button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-primary {
+      background: #7b61ff;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .btn-primary:hover {
+      background: #6a4ff0;
+    }
+
+    .output-area {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .output-label {
+      font-size: 11px;
+      color: #888;
+      font-weight: 500;
+    }
+
+    #preview {
+      flex: 1;
+      background: #1e1e1e;
+      border: 1px solid #3d3d3d;
+      border-radius: 6px;
+      padding: 12px;
+      font-family: "JetBrains Mono", "Fira Code", "SF Mono", monospace;
+      font-size: 11px;
+      line-height: 1.5;
+      color: #d4d4d4;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .footer {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .status-bar {
+      font-size: 11px;
+      color: #888;
+      min-height: 16px;
+      text-align: center;
+    }
+
+    .status-bar.success {
+      color: #4caf50;
+    }
+
+    .status-bar.error {
+      color: #f44;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-action {
+      flex: 1;
+      background: #3d3d3d;
+      color: #e0e0e0;
+      justify-content: center;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .btn-action:hover {
+      background: #4a4a4a;
+    }
+
+    .btn-action:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .btn-action svg {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+    }
+
+    .empty-state {
+      color: #666;
+      text-align: center;
+      padding: 40px 20px;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="selected-frame" id="frame-info">
+      <span class="dot"></span>
+      <span>No frame selected</span>
+    </div>
+
+   <div class="options-row">
+    <div class="controls-row" style="display: block;"> Select the size value
+      <select class="unit-select" id="unit-select" title="Unit">
+        <option value="px" selected>px</option>
+        <option value="rem">rem</option>
+        <option value="em">em</option>
+        <option value="vw">vw</option>
+      </select>
+   </div>
+
+      <label class="checkbox-label">
+        <input type="checkbox" id="chk-visible" checked>
+        Visible layers only
+      </label>
+
+      <button class="btn-primary" id="btn-generate">Generate Markdown</button>
+ 
+   </div>
+  </div>
+
+  <div class="output-area">
+    <span class="output-label">Output</span>
+    <pre id="preview"><span class="empty-state">Select a frame and click "Generate Markdown" to export its structure and properties.</span></pre>
+  </div>
+
+  <div class="footer">
+    <div class="status-bar" id="status"></div>
+
+    <div class="action-buttons">
+      <button class="btn-action" id="btn-copy" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+          <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path>
+        </svg>
+        Copy
+      </button>
+      <button class="btn-action" id="btn-download" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        Download .md
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const preview = document.getElementById("preview");
+    const status = document.getElementById("status");
+    const btnCopy = document.getElementById("btn-copy");
+    const btnDownload = document.getElementById("btn-download");
+    const btnGenerate = document.getElementById("btn-generate");
+    const chkVisible = document.getElementById("chk-visible");
+    const unitSelect = document.getElementById("unit-select");
+    const frameInfo = document.getElementById("frame-info");
+
+    let currentMarkdown = "";
+    let selectedFrameName = "";
+
+    btnGenerate.addEventListener("click", () => {
+      status.className = "status-bar";
+      status.textContent = "Generating...";
+      parent.postMessage({
+        pluginMessage: {
+          type: "generate",
+          onlyVisible: chkVisible.checked,
+          unit: unitSelect.value
+        }
+      }, "*");
+    });
+
+    btnCopy.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(currentMarkdown);
+      } catch (e) {
+        const ta = document.createElement("textarea");
+        ta.value = currentMarkdown;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+      }
+      status.className = "status-bar success";
+      status.textContent = "Copied to clipboard!";
+      setTimeout(() => { status.textContent = ""; }, 2500);
+    });
+
+    btnDownload.addEventListener("click", () => {
+      const fileName = selectedFrameName
+        ? selectedFrameName.replace(/[^a-zA-Z0-9-_]/g, "-").toLowerCase() + ".md"
+        : "figma-export.md";
+      const blob = new Blob([currentMarkdown], { type: "text/markdown;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      status.className = "status-bar success";
+      status.textContent = "Download started!";
+      setTimeout(() => { status.textContent = ""; }, 2500);
+    });
+
+    window.onmessage = (event) => {
+      const msg = event.data.pluginMessage;
+      if (!msg) return;
+
+      if (msg.type === "result") {
+        currentMarkdown = msg.markdown;
+        preview.textContent = msg.markdown;
+        btnCopy.disabled = false;
+        btnDownload.disabled = false;
+        status.className = "status-bar success";
+        status.textContent = "Done! Your markdown was generated successfully.";
+      }
+
+      if (msg.type === "error") {
+        status.className = "status-bar error";
+        status.textContent = msg.message;
+      }
+
+      if (msg.type === "selection") {
+        selectedFrameName = msg.name || "";
+        if (msg.name) {
+          frameInfo.innerHTML = `<span class="dot"></span><span class="name">${msg.name}</span> <span>is selected</span>`;
+        } else {
+          frameInfo.innerHTML = `<span class="dot" style="background:#666"></span><span>No frame selected</span>`;
+        }
+      }
+    };
+  </script>
+</body>
+</html>
